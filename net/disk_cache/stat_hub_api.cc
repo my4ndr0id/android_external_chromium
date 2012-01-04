@@ -1,5 +1,5 @@
 /** ---------------------------------------------------------------------------
-Copyright (c) 2011, Code Aurora Forum. All rights reserved.
+Copyright (c) 2011, 2012 Code Aurora Forum. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -372,4 +372,8 @@ void StatHubMainUrlLoaded(const char* url) {
     if(NULL!=url) {
         StatHubCmd(INPUT_CMD_WK_MAIN_URL_LOADED, (void*)url, strlen(url)+1, NULL, 0);
     }
+}
+
+bool StatHubIsProcReady(const char* name) {
+    return stat_hub::StatHub::GetInstance()->IsProcReady(name);
 }

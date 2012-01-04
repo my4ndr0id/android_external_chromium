@@ -1,5 +1,5 @@
 /** ---------------------------------------------------------------------------
-Copyright (c) 2011, Code Aurora Forum. All rights reserved.
+Copyright (c) 2011, 2012 Code Aurora Forum. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -45,9 +45,18 @@ typedef enum {
     INPUT_CMD_WK_FINISH_PAGE_LOAD,  // 11
     INPUT_CMD_TBD_12,               // 12 TBD
     INPUT_CMD_CH_URL_REQUEST_DONE,  // 13
+    INPUT_CMD_WK_JS_SEQ,            // 14
 
     INPUT_CMD_USER_DEFINED = 32     // 256
 } StatHubInputCmd;
+
+typedef union {
+    unsigned value;
+    struct bf {
+        unsigned cacheable:1;       // first bit
+        unsigned mime_type:3;       // 3 bits: up to 6 types defined in CachedResource.cpp
+    } bf;
+} UrlProperty;
 
 // ================================ StatHub CMD Interface ====================================
 extern unsigned int StatHubHash(const char* str)
@@ -60,5 +69,6 @@ extern void StatHubMainUrlLoaded(const char* url)
     __attribute__ ((visibility ("default"), used));
 extern void StatHubCmd(unsigned short cmd, void* param1, int sizeofparam1, void* param2, int sizeofparam2)
     __attribute__ ((visibility ("default"), used));
-
+extern bool StatHubIsProcReady(const char* name)
+    __attribute__ ((visibility ("default"), used));
 #endif /* STAT_HUB_CMD_API_H_ */

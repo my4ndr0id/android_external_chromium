@@ -1,5 +1,5 @@
 /** ---------------------------------------------------------------------------
-Copyright (c) 2011, Code Aurora Forum. All rights reserved.
+Copyright (c) 2011, 2012 Code Aurora Forum. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -141,6 +141,29 @@ StatProcessor* StatHub::DeleteProcessor(StatProcessor* processor) {
         return next;
     }
     return NULL;
+}
+
+bool StatHub::IsProcReady(const char* name) {
+    if (IsReady()) {
+        std::string proc_name;
+
+        for (StatProcessor* processor=first_processor_; processor!=NULL; processor=processor->next_) {
+            if (processor->OnGetProcName(proc_name)) {
+                //if (proc_name==name) {
+                size_t found = proc_name.find(name);
+                if (found != std::string::npos) {
+                    if (IsVerboseEnabled()) {
+                        LOG(INFO) << "StatHub::IsProcReady:(true) for:" << name;
+                    }
+                    return true;
+                }
+            }
+        }
+    }
+    if (IsVerboseEnabled()) {
+        LOG(INFO) << "StatHub::(false) for:" << name;
+    }
+    return false;
 }
 
 bool StatHub::Init(const std::string& db_path, MessageLoop* message_loop, net::HttpCache* http_cache) {
