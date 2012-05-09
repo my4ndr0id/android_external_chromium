@@ -24,6 +24,9 @@
 #include <cutils/properties.h>
 #include <cutils/log.h>
 
+// Define Log Tag for this source file.
+#define LOG_TAG "Socket_Pool"
+
 using base::TimeDelta;
 
 namespace {
@@ -220,6 +223,13 @@ ClientSocketPoolBaseHelper::ClientSocketPoolBaseHelper(
                   netCloseUnusedSocketsSystemProperty, "1")) {
     close_unused_sockets_enabled = (bool)atoi(netCloseUnusedSocketsSystemProperty);
   }
+
+  char net_statistics_enabled_sys_property[PROPERTY_VALUE_MAX];
+  if(property_get("net.statistics",
+                  net_statistics_enabled_sys_property, "0")) {
+    net_statistics_enabled = (bool)atoi(net_statistics_enabled_sys_property);
+    SLOGD("system net.statistics value: %d", net_statistics_enabled);
+  }
 }
 
 ClientSocketPoolBaseHelper::~ClientSocketPoolBaseHelper() {
@@ -280,6 +290,9 @@ int ClientSocketPoolBaseHelper::RequestSocket(
     delete request;
   } else {
     InsertRequestIntoQueue(request, group->mutable_pending_requests());
+    if (net_statistics_enabled) {
+      SLOGD("insertRequestToQueue Host = %s Size = %d", group_name.c_str(), group->mutable_pending_requests()->size());
+    }
   }
   return rv;
 }
@@ -518,6 +531,9 @@ void ClientSocketPoolBaseHelper::CancelRequest(
       scoped_ptr<const Request> req(RemoveRequestFromQueue(it, group));
       req->net_log().AddEvent(NetLog::TYPE_CANCELLED, NULL);
       req->net_log().EndEvent(NetLog::TYPE_SOCKET_POOL, NULL);
+      if (net_statistics_enabled) {
+        SLOGD("removeRequestFromQueue Host = %s Size = %d", group_name.c_str(), group->mutable_pending_requests()->size());
+      }
 
       // We let the job run, unless we're at the socket limit.
       if (group->jobs().size() && ReachedMaxSocketsLimit()) {
@@ -876,6 +892,9 @@ void ClientSocketPoolBaseHelper::OnConnectJobComplete(
           base::TimeDelta(), group, r->net_log());
       r->net_log().EndEvent(NetLog::TYPE_SOCKET_POOL, NULL);
       InvokeUserCallbackLater(r->handle(), r->callback(), result);
+      if (net_statistics_enabled) {
+        SLOGD("removeRequestFromQueue Host = %s Size = %d", group_name.c_str(), group->mutable_pending_requests()->size());
+      }
     } else {
       AddIdleSocket(socket.release(), group);
       OnAvailableSocketSlot(group_name, group);
@@ -899,6 +918,9 @@ void ClientSocketPoolBaseHelper::OnConnectJobComplete(
       r->net_log().EndEventWithNetErrorCode(NetLog::TYPE_SOCKET_POOL,
                                             result);
       InvokeUserCallbackLater(r->handle(), r->callback(), result);
+      if (net_statistics_enabled) {
+        SLOGD("removeRequestFromQueue Host = %s Size = %d", group_name.c_str(), group->mutable_pending_requests()->size());
+      }
     } else {
       RemoveConnectJob(job, group);
     }
@@ -959,6 +981,9 @@ void ClientSocketPoolBaseHelper::ProcessPendingRequest(
 
     request->net_log().EndEventWithNetErrorCode(NetLog::TYPE_SOCKET_POOL, rv);
     InvokeUserCallbackLater(request->handle(), request->callback(), rv);
+    if (net_statistics_enabled) {
+      SLOGD("removeRequestFromQueue Host = %s Size = %d", group_name.c_str(), group->mutable_pending_requests()->size());
+    }
   }
 }
 

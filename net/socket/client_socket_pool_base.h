@@ -577,6 +577,9 @@ class ClientSocketPoolBaseHelper
   // Whether to use timer to cleanup idle sockets.
   bool use_cleanup_timer_;
 
+  // Whether statistics is enabled.
+  bool net_statistics_enabled;
+
   // Whether unused sockets are closed after page load fnished
   bool close_unused_sockets_enabled;
 
